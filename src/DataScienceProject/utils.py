@@ -24,7 +24,7 @@ def read_sql_data():
             db=db
         )
         logging.info(f"Connection Established: \n{mydb}")
-        df = pd.read_sql_query("Select * from inventory", mydb)
+        df = pd.read_sql_query("Select * from student", mydb)
         print(df.head())
 
         return df
