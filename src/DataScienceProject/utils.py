@@ -8,8 +8,6 @@ import pymysql
 import pickle
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import r2_score
-from tqdm import tqdm
-import time
 
 load_dotenv()
 
@@ -48,48 +46,36 @@ def save_object(file_path, obj):
     except Exception as e:
         raise CustomException(e, sys)
     
+
 def evaluate_models(X_train, y_train, X_test, y_test, models, params):
-    try:
-        report = {}
+    report = {}
 
-        for model_name in tqdm(models, desc="Training models"):
-            model = models[model_name]
-            param_grid = params[model_name]
+    for model_name, model in models.items():
+        param_grid = params.get(model_name, {})
 
-            start_time = time.time()
-            logging.info(f"Training started for {model_name}")
-
+        if param_grid:
             gs = GridSearchCV(
-                estimator=model,
-                param_grid=param_grid,
+                model,
+                param_grid,
                 cv=5,
-                scoring="r2",
+                scoring='r2',
                 n_jobs=-1
             )
-
             gs.fit(X_train, y_train)
-
             best_model = gs.best_estimator_
+        else:
+            model.fit(X_train, y_train)
+            best_model = model
 
-            y_test_pred = best_model.predict(X_test)
-            test_score = r2_score(y_test, y_test_pred)
+        predicted = best_model.predict(X_test)
+        r2 = r2_score(y_test, predicted)
 
-            report[model_name] = {
-                "model": best_model,
-                "score": test_score
-            }
+        report[model_name] = {
+            "model": best_model,
+            "score": r2
+        }
 
-            end_time = time.time()
-            logging.info(
-                f"{model_name} completed in {end_time - start_time:.2f} seconds "
-                f"with R2 score {test_score:.4f}"
-            )
-
-        return report
-
-    except Exception as e:
-        raise CustomException(e, sys)
-    
+    return report
 
 def load_object(file_path):
     try:

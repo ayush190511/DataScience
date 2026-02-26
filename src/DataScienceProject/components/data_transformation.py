@@ -11,7 +11,6 @@ from src.DataScienceProject.logger import logging
 from src.DataScienceProject.utils import save_object
 import os
 
-import pickle
 
 @dataclass
 class DataTransformationConfig:
@@ -84,7 +83,6 @@ class DataTransformation:
             preprocessor_obj = self.get_data_transformer_object()
 
             target_column_name = "math_score"
-            numerical_features = ["writing_score", "reading_score"]
 
 
             # Divide the dataset into independent and dependent features
@@ -98,12 +96,17 @@ class DataTransformation:
             logging.info("Applying preprocessing on training and testing dataframe")
 
             input_feature_train_arr = preprocessor_obj.fit_transform(input_feature_train_df)
-            input_feature_test_arr = preprocessor_obj.fit_transform(input_feature_test_df)
+            input_feature_test_arr = preprocessor_obj.transform(input_feature_test_df)
+
+            feature_names = preprocessor_obj.get_feature_names_out()
+            logging.info(f"Transformed feature count: {len(feature_names)}")
 
             train_arr = np.c_[input_feature_train_arr, np.array(target_feature_train_df)]
             test_arr = np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
 
             logging.info("Saved preprocessing object")
+
+            os.makedirs(os.path.dirname(self.data_transformation_config.preprocessor_obj_file_path), exist_ok=True)
 
             save_object(
                 file_path=self.data_transformation_config.preprocessor_obj_file_path,
@@ -113,7 +116,7 @@ class DataTransformation:
             return (
                 train_arr,
                 test_arr,
-                self.data_transformation_config.preprocessor_obj_file_path
+                preprocessor_obj
             )
 
         except Exception as e:

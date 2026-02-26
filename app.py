@@ -1,27 +1,38 @@
-from src.DataScienceProject.logger import logging
-from src.DataScienceProject.exception import CustomException
-from src.DataScienceProject.components.data_ingestion import DataIngestion, DataIngestionConfig
-from src.DataScienceProject.components.data_transformation import DataTransformation, DataTransformationConfig
-from src.DataScienceProject.components.model_trainer import ModelTrainer, ModelTrainerConfig
-import sys 
+import streamlit as st
+import pandas as pd
+import pickle
 
-if __name__ == "__main__":
-    logging.info("This is a log message from the main block.")
-    try:
-        # data_ingestion_config = DataIngestionConfig()
-        data_ingestion = DataIngestion()
-        train_data_path, test_data_path = data_ingestion.initiate_data_ingestion()
+model = pickle.load(open("artifacts/model.pkl", "rb"))
+preprocessor = pickle.load(open("artifacts/preprocessor.pkl", "rb"))
 
-        # data_transformation_config = DataTransformationConfig()
-        data_transformation = DataTransformation()
-        train_array, test_array, _ = data_transformation.initiate_data_transformation(train_data_path, test_data_path)
+st.title("🎓 Student Math Score Prediction")
 
-        #Model Training
-        model_trainer = ModelTrainer()
-        r2_score = model_trainer.initiate_model_trainer(train_array, test_array)
-        logging.info(f"R2 Score is {r2_score}")
+gender = st.selectbox("Gender", ["male", "female"])
+race = st.selectbox("Race/Ethnicity", ["group A", "group B", "group C", "group D", "group E"])
+parent_edu = st.selectbox("Parental Level of Education", [
+    "some high school",
+    "high school",
+    "some college",
+    "associate's degree",
+    "bachelor's degree",
+    "master's degree"
+])
+lunch = st.selectbox("Lunch", ["standard", "free/reduced"])
+prep = st.selectbox("Test Preparation Course", ["none", "completed"])
+reading = st.number_input("Reading Score", 0, 100)
+writing = st.number_input("Writing Score", 0, 100)
 
+if st.button("Predict"):
+    input_df = pd.DataFrame([{
+        "gender": gender,
+        "race_ethnicity": race,
+        "parental_level_of_education": parent_edu,
+        "lunch": lunch,
+        "test_preparation_course": prep,
+        "reading_score": reading,
+        "writing_score": writing
+    }])
 
-    except Exception as e:
-        logging.info("Custom exception occurred.")
-        raise CustomException(str(e), sys)
+    prediction = model.predict(input_df)
+
+    st.success(f"Predicted Math Score: {prediction[0]:.2f}")
