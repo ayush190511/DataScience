@@ -2,6 +2,11 @@ import os
 import sys
 from dataclasses import dataclass
 
+from urllib.parse import urlparse
+import numpy as np
+import mlflow
+import dagshub
+
 from catboost import CatBoostRegressor
 from sklearn.ensemble import (
     AdaBoostRegressor,
@@ -9,7 +14,7 @@ from sklearn.ensemble import (
     RandomForestRegressor
 )
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.tree import DecisionTreeRegressor
 from xgboost import XGBRegressor
@@ -17,6 +22,13 @@ from xgboost import XGBRegressor
 from src.DataScienceProject.exception import CustomException
 from src.DataScienceProject.logger import logging
 from src.DataScienceProject.utils import save_object, evaluate_models
+
+
+dagshub.init(
+    repo_owner='ayushmishra642001',
+    repo_name='DataScience',
+    mlflow=True
+)
 
 
 
@@ -28,6 +40,12 @@ class ModelTrainerConfig:
 class ModelTrainer:
     def __init__(self):
         self.model_trainer_config = ModelTrainerConfig()
+
+    def eval_metrics(self, actual, predicted):
+        rmse = np.sqrt(mean_squared_error(actual, predicted))
+        mae = mean_absolute_error(actual, predicted)
+        r2 = r2_score(actual, predicted)
+        return rmse, mae, r2
         
     def initiate_model_trainer(self, train_array, test_array):
         try:
@@ -105,8 +123,50 @@ class ModelTrainer:
             best_model = model_report[best_model_name]["model"]
             best_model_score = model_report[best_model_name]["score"]  
 
+            print("This is the best model name:\n", best_model_name)
+
+            # model_names = list(params.keys())
+
+            # actual_model = ""
+
+            # for model in model_names:
+            #     if best_model_name == model:
+            #         actual_model = actual_model + model
+
+            # best_params = params[actual_model]
+
+            actual_model = best_model_name
+            best_params = best_model.get_params()
+
+            # mlflow.set_registry_url("https://dagshub.com/ayushmishra642001/DataScience.mlflow")
+            tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
+
+            # Ensure acceptable model
             if best_model_score < 0.6:
-                raise CustomException("No best model found")   
+                raise CustomException("No best model found")
+            
+            mlflow.set_experiment("Student Performance Prediction")
+            
+            with mlflow.start_run():
+            
+                predicted_qualities = best_model.predict(X_test)
+                rmse, mae, r2 = self.eval_metrics(y_test, predicted_qualities)
+            
+                # Log best model name
+                mlflow.log_param("best_model", best_model_name)
+            
+                # Log best parameters selected by GridSearch
+                mlflow.log_params(best_model.get_params())
+            
+                # Log evaluation metrics
+                mlflow.log_metrics({
+                    "rmse": rmse,
+                    "mae": mae,
+                    "r2": r2
+                })
+            
+                # Log trained model
+                mlflow.sklearn.log_model(best_model, name="model", serialization_format="skops")
 
             logging.info(f"Best model is {best_model_name} with score {best_model_score}")
 

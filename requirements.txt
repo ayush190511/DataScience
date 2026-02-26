@@ -12,4 +12,6 @@ python-dotenv
 catboost
 xgboost
 tqdm
+mlflow
+dagshub
 # -e . # This line is used for editable installations(you can use this if you just want to use "pip install -r requirements.txt" instead of "python setup.py install") and should not be included in the requirements.txt file.
