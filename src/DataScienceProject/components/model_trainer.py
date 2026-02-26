@@ -172,7 +172,7 @@ class ModelTrainer:
                 # Log full pipeline
                 mlflow.sklearn.log_model(
                     final_pipeline,
-                    artifact_path="model"
+                    name="model"
                 )
 
             # Save full pipeline locally
