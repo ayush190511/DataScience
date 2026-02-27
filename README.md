@@ -127,8 +127,11 @@ Open browser at:
 
 http://localhost:8501
 
-Run on a browser with this link:
-[Link](https://studentmarksdsproject.streamlit.app/)
+<p align="center">
+  <a href="https://studentmarksdsproject.streamlit.app/" target="_blank">
+    <img src="https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge" />
+  </a>
+</p>
 
 ------------------------------------------------------------------------
 
