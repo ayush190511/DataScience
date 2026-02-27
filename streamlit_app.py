@@ -3,7 +3,6 @@ import pandas as pd
 import pickle
 
 model = pickle.load(open("artifacts/model.pkl", "rb"))
-preprocessor = pickle.load(open("artifacts/preprocessor.pkl", "rb"))
 
 st.title("🎓 Student Math Score Prediction")
 
@@ -34,5 +33,4 @@ if st.button("Predict"):
     }])
 
     prediction = model.predict(input_df)
-
     st.success(f"Predicted Math Score: {prediction[0]:.2f}")
