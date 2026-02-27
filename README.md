@@ -128,7 +128,7 @@ Open browser at:
 http://localhost:8501
 
 Run on a browser with this link:
-[text](https://studentmarksdsproject.streamlit.app/)
+[Link](https://studentmarksdsproject.streamlit.app/)
 
 ------------------------------------------------------------------------
 
